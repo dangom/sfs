@@ -3,7 +3,18 @@ Compute Signal Fluctuation Sensitivity (SFS) for a NIfTI in MNI.
 Assumes MNI because of brain mask and developed to (eventually) target fMRIPREP
 preprocessed data.
 
-Reports results for ROIs from the Yeo parcellation.
+TODO: Reports results for ROIs from the Yeo parcellation.
+
+SFS description:
+
+In the first term, the numerator consists of the mean signal of a time-series
+acquired from a voxel in the region of interest. The denominator consists of
+the average of all time-series within the brain.
+
+In the second term, the numerator consists of the standard deviation of a
+time-series acquired from a voxel in the region of interest. The denominator
+consists of the average of standard deviations of voxels within a region
+where BOLD fluctuations are not expected.
 """
 from typing import Union
 
@@ -45,20 +56,25 @@ def confound_std(img: niimg_like) -> float:
     In order to be completely independent of external sources, we will use
     nilearn to estimate noisy fluctuations."""
     masker = NiftiMasker(mask_strategy="template")
-    masker.fit(img)
-    cof = image.high_variance_confounds(img, n_confounds=1, mask_img=masker.mask_img_)
-    return cof.std()
+    masker.fit(img)  # Side effect: computes a mask and stores it within the masker obj.
+
+    # high_variance_confounds in Nilearn is kind of a tCompCor.
+    cof = image.high_variance_confounds(img, n_confounds=3, mask_img=masker.mask_img_)
+    # Take the std of all 3 confounds and average them.
+    return cof.std(axis=0).mean()
 
 
 def signal_fluctuation_sensitivity(img: niimg_like) -> nib.nifti1.Nifti1Image:
     """Compute voxelwise SFS given an img in MNI space and an array containing
     a CSF confounding regressor"""
-    # First term
+    # first_term is the "first term" of the SFS, as referred to in the paper.
     meanimg = voxelwise_mean(img)
     first_term = meanimg.get_data() / global_mean_within_mni(img)
 
+    # Similary, the second term is the "second term" in the paper.
     stdimg = voxelwise_std(img)
     second_term = stdimg.get_data() / confound_std(img)
 
+    # SFS is the product of both terms. Here we return it as an image.
     sfs = first_term * second_term
     return image.new_img_like(img, data=sfs, affine=meanimg.affine, copy_header=True)
