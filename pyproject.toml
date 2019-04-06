@@ -1,0 +1,17 @@
+[metadata]
+name = 'sfs'
+version = '0.0.1'
+description = ''
+author = 'Daniel Gomez'
+author_email = 'd.gomez@posteo.org'
+license = 'MIT'
+url = 'https://github.com/dangom/sfs'
+
+[requires]
+python_version = ['3.6', '3.7', 'pypy3']
+
+[build-system]
+requires = ['setuptools', 'wheel']
+
+[tool.hatch.commands]
+prerelease = 'hatch build'
