@@ -78,3 +78,9 @@ def signal_fluctuation_sensitivity(img: niimg_like) -> nib.nifti1.Nifti1Image:
     # SFS is the product of both terms. Here we return it as an image.
     sfs = first_term * second_term
     return image.new_img_like(img, data=sfs, affine=meanimg.affine, copy_header=True)
+
+
+def tsnr(img: niimg_like) -> nib.nifti1.Nifti1Image:
+    """Computes the tsnr of an image.
+    """
+    return voxelwise_mean(img) / voxelwise_std(img)

@@ -6,6 +6,7 @@
 
 * [Purpose](#purpose)
 * [Installation](#installation)
+* [Usage](#usage)
 * [License](#license)
 
 ## Purpose
